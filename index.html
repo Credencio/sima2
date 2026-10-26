@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SIMA - Monitoria de Preços</title>
+<meta name="description" content="Monitoria de preços de produtos agrícolas (SIMA) em Moçambique: cotações, evolução de preços, índice e relatório PDF.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-in gut">
+    <div class="brand">
+      <img class="emblem" src="assets/logos/emblema.png" width="46" height="50" alt="Emblema da República de Moçambique">
+      <div><h1 data-i="brand">SIMA</h1><small data-i="brandSub">Sistema de Monitoria de Preços de Produtos Agrícolas</small></div>
+    </div>
+    <div class="status">
+      <span id="modePill" class="pill load"><span class="dot"></span><span id="modeTxt">…</span></span>
+      <span id="lastUpd"></span>
+    </div>
+    <div class="spacer"></div>
+    <span class="clock" id="clock"></span>
+    <div class="seg" role="group" aria-label="Language">
+      <button id="lang-pt" aria-pressed="true">PT</button><button id="lang-en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+  <nav class="tabbar" aria-label="Secções"><div class="tabbar-in gut">
+    <div class="tabs-list" role="tablist" id="tabs">
+      <button role="tab" data-v="about" aria-pressed="true" data-i="tabAbout">Sobre o SIMA</button>
+      <button role="tab" data-v="market" aria-pressed="false" data-i="tabMarket">Preços</button>
+      <button role="tab" data-v="bulletin" aria-pressed="false" data-i="tabBulletin">Boletim semanal</button>
+    </div>
+    <div class="tb-actions"><button class="btn" id="btnRefresh" data-i="refresh">Actualizar</button><button class="btn primary" id="btnPdf" data-i="pdf">Exportar PDF</button></div>
+  </div></nav>
+</header>
+<div class="tape" aria-label="Ticker"><div class="tape-track" id="tape"></div></div>
+
+<main class="gut">
+  <div id="banner" class="banner" hidden></div>
+
+  <div id="viewMarket" hidden>
+  <section class="filters" aria-label="Filtros">
+    <div class="fld"><label for="fProv" data-i="prov">Província</label><select id="fProv"></select></div>
+    <div class="fld"><label for="fMkt" data-i="mkt">Mercado</label><select id="fMkt"></select></div>
+    <div class="fld"><label for="fSel" data-i="seller">Tipo de vendedor</label><select id="fSel"></select></div>
+    <div class="fld"><label for="fCat" data-i="cat">Categoria</label><select id="fCat"></select></div>
+    <div class="fld segf"><label data-i="period">Período</label>
+      <div class="seg" id="segPeriod">
+        <button data-v="30">1M</button><button data-v="90">3M</button><button data-v="180">6M</button><button data-v="365">1A</button><button data-v="0">MAX</button>
+      </div></div>
+    <div class="fld segf"><label data-i="agg">Intervalo</label>
+      <div class="seg" id="segAgg"><button data-v="D" data-i="aggD">Dia</button><button data-v="W" data-i="aggW">Semana</button><button data-v="M" data-i="aggM">Mês</button></div></div>
+    <div class="fld segf"><button class="btn btn-reset" id="btnReset" type="button" data-i="resetFilters">Remover filtros</button></div>
+  </section>
+
+  <div class="board">
+    <section class="panel">
+      <div class="ph" style="flex-wrap:wrap"><h2 data-i="watch">Cotações</h2><span class="hint" id="wlCount"></span>
+        <input id="q" class="search" type="search" data-ip="searchPh" placeholder="Procurar produto…" autocomplete="off"></div>
+      <div class="wl-wrap"><table class="wl"><thead><tr>
+        <th data-s="sym" data-i="thSym">Produto</th><th data-s="last" data-i="thLast">Último</th><th data-s="pct" data-i="thChg">Var.</th><th data-i="thTrend">Tend.</th>
+      </tr></thead><tbody id="wl"></tbody></table></div>
+    </section>
+
+    <section class="panel">
+      <div class="quote" id="quote"></div>
+      <div class="stats" id="stats"></div>
+      <div class="ctools">
+        <div class="ohlc" id="ohlc"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="seg" id="segType"><button data-v="candle" data-i="candle">Velas</button><button data-v="line" data-i="line">Linha</button><button data-v="area" data-i="area">Área</button></div>
+          <div class="seg"><button id="btnMA" aria-pressed="true">MM4</button></div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chart" role="img" aria-label="Gráfico de preço"></canvas></div>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <div class="ph"><h2 data-i="depth">Preço por mercado</h2><span class="hint">MZN/kg</span></div>
+        <div class="depth" id="depth"></div>
+      </section>
+      <section class="panel" style="margin-top:14px">
+        <div class="ph"><h2 data-i="movers">Maiores variações</h2></div>
+        <div class="movers"><div><h3 class="up" data-i="gainers">Em alta</h3><div id="gain"></div></div><div><h3 class="down" data-i="losers">Em baixa</h3><div id="lose"></div></div></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="lower">
+    <section class="panel">
+      <div class="ph"><h2 data-i="index">Índice SIMA de preços</h2><span class="hint" data-i="indexBase">Base = 100 no início do período</span></div>
+      <div class="idx-head"><span class="v num" id="idxV">—</span><span class="num" id="idxC"></span></div>
+      <div class="idx-box"><canvas id="idxChart" role="img" aria-label="Índice"></canvas></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h2 data-i="heat">Mapa do mercado</h2><span class="hint" data-i="heatHint">Variação no último intervalo</span></div>
+      <div class="heat" id="heat"></div>
+    </section>
+    <section class="panel trades">
+      <div class="ph"><h2 data-i="trades">Últimos registos de preço</h2><span class="hint" id="trCount"></span></div>
+      <div class="tr-wrap"><table class="trd"><thead><tr>
+        <th data-i="thDate">Data</th><th data-i="thSym">Produto</th><th data-i="mkt">Mercado</th><th data-i="prov">Província</th><th data-i="seller">Tipo de vendedor</th><th class="r" data-i="thPrice">Preço MZN/kg</th><th class="r" data-i="thVsAvg">vs média</th>
+      </tr></thead><tbody id="trades"></tbody></table></div>
+    </section>
+  </div>
+  <p class="foot" data-i="foot">Preço = preço médio por kg (MZN) das amostras recolhidas em cada registo do inquérito Survey123. Velas: abertura e fecho são médias do primeiro e último dia do intervalo; máximo e mínimo são as amostras extremas.</p>
+  </div>
+
+  <div id="viewBulletin" hidden></div>
+  <div id="viewAbout"></div>
+</main>
+
+<footer class="site-foot"><div class="gut site-foot-in">
+  <div class="sf-sys"><img src="assets/logos/emblema.png" width="28" height="30" alt=""><span><b data-i="brand">SIMA</b> · <span data-i="brandSub">Sistema de Monitoria de Preços de Produtos Agrícolas</span></span></div>
+  <div class="sf-dev"><span data-i="devBy">Desenvolvido por</span><span class="mrv-chip"><img src="assets/logos/mrv.png" width="157" height="67" alt="MRV - Unidade de Monitoria, Relatório e Verificação do REDD+"></span></div>
+</div></footer>
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="config.js" defer></script>
+<script src="assets/js/catalog.js" defer></script>
+<script src="assets/js/i18n.js" defer></script>
+<script src="assets/js/app.js" defer></script>
+<script src="assets/js/bulletin.js" defer></script>
+<script src="assets/js/about.js" defer></script>
+</body>
+</html>
